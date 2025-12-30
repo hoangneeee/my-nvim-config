@@ -24,7 +24,9 @@ param(
     [switch]$SkipFonts,
     [switch]$NvimOnly,
     [switch]$Check,
-    [switch]$Help
+    [switch]$Help,
+    [ValidateSet("auto", "choco", "scoop", "winget")]
+    [string]$PackageManager = "auto"
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,10 +47,11 @@ function Show-Help {
   Usage: .\install.ps1 [options]
 
   Options:
-    -Check        Check if all dependencies are installed
-    -SkipFonts    Skip Nerd Fonts installation
-    -NvimOnly     Only install Neovim and its config
-    -Help         Show this help message
+    -Check              Check if all dependencies are installed
+    -SkipFonts          Skip Nerd Fonts installation
+    -NvimOnly           Only install Neovim and its config
+    -PackageManager     Package manager to use: auto, choco, scoop, winget (default: auto)
+    -Help               Show this help message
 
   What gets installed:
     - Neovim (latest)
@@ -60,9 +63,16 @@ function Show-Help {
     - lazygit
 
   Examples:
-    .\install.ps1           # Full installation
-    .\install.ps1 -Check    # Check dependencies only
-    .\install.ps1 -NvimOnly # Only Neovim + config
+    .\install.ps1                         # Full installation (auto-detect PM)
+    .\install.ps1 -PackageManager choco   # Use Chocolatey
+    .\install.ps1 -PackageManager scoop   # Use Scoop
+    .\install.ps1 -Check                  # Check dependencies only
+    .\install.ps1 -NvimOnly               # Only Neovim + config
+
+  Package Manager Priority (auto mode):
+    1. Scoop   - Best for dev tools, no admin required
+    2. Choco   - Good for GUI apps, needs admin
+    3. Winget  - Windows 10/11 only, not for Server
 
 "@
 }
@@ -141,6 +151,82 @@ function Test-AllDependencies {
     return $missing
 }
 
+# ============ Package Manager Functions ============
+
+function Get-AvailablePackageManager {
+    if (Test-Command "scoop") { return "scoop" }
+    if (Test-Command "choco") { return "choco" }
+    if (Test-Command "winget") { return "winget" }
+    return $null
+}
+
+function Install-Scoop {
+    Write-Step "Installing Scoop"
+    try {
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+        # Add extras bucket for more packages
+        scoop bucket add extras
+        Write-Success "Scoop installed"
+        return $true
+    }
+    catch {
+        Write-Err "Failed to install Scoop: $_"
+        return $false
+    }
+}
+
+function Install-Chocolatey {
+    Write-Step "Installing Chocolatey"
+    try {
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        Write-Success "Chocolatey installed"
+        return $true
+    }
+    catch {
+        Write-Err "Failed to install Chocolatey: $_"
+        return $false
+    }
+}
+
+function Install-WithScoop {
+    param(
+        [string]$PackageName,
+        [string]$DisplayName
+    )
+
+    Write-Host "   Installing $DisplayName..." -NoNewline
+    $result = scoop install $PackageName 2>&1
+
+    if ($LASTEXITCODE -eq 0 -or $result -match "already installed") {
+        Write-Success "$DisplayName installed"
+        return $true
+    } else {
+        Write-Warn "$DisplayName may need manual installation"
+        return $false
+    }
+}
+
+function Install-WithChoco {
+    param(
+        [string]$PackageName,
+        [string]$DisplayName
+    )
+
+    Write-Host "   Installing $DisplayName..." -NoNewline
+    $result = choco install $PackageName -y --no-progress 2>&1
+
+    if ($LASTEXITCODE -eq 0 -or $result -match "already installed") {
+        Write-Success "$DisplayName installed"
+        return $true
+    } else {
+        Write-Warn "$DisplayName may need manual installation"
+        return $false
+    }
+}
+
 function Install-WithWinget {
     param(
         [string]$PackageId,
@@ -206,27 +292,47 @@ function Install-NerdFont {
 }
 
 function Install-DevTools {
-    Write-Step "Installing Development Tools"
+    param([string]$PM)
 
+    Write-Step "Installing Development Tools using $PM"
+
+    # Package names for each package manager
     $packages = @(
-        @{ Id = "Git.Git"; Name = "Git" },
-        @{ Id = "Neovim.Neovim"; Name = "Neovim" },
-        @{ Id = "OpenJS.NodeJS.LTS"; Name = "Node.js LTS" },
-        @{ Id = "Python.Python.3.12"; Name = "Python 3.12" },
-        @{ Id = "BurntSushi.ripgrep.MSVC"; Name = "Ripgrep" },
-        @{ Id = "sharkdp.fd"; Name = "fd" },
-        @{ Id = "junegunn.fzf"; Name = "fzf" },
-        @{ Id = "JesseDuffield.lazygit"; Name = "lazygit" }
+        @{ Name = "Git";        Scoop = "git";      Choco = "git";          Winget = "Git.Git" },
+        @{ Name = "Neovim";     Scoop = "neovim";   Choco = "neovim";       Winget = "Neovim.Neovim" },
+        @{ Name = "Node.js";    Scoop = "nodejs-lts"; Choco = "nodejs-lts"; Winget = "OpenJS.NodeJS.LTS" },
+        @{ Name = "Python";     Scoop = "python";   Choco = "python3";      Winget = "Python.Python.3.12" },
+        @{ Name = "Ripgrep";    Scoop = "ripgrep";  Choco = "ripgrep";      Winget = "BurntSushi.ripgrep.MSVC" },
+        @{ Name = "fd";         Scoop = "fd";       Choco = "fd";           Winget = "sharkdp.fd" },
+        @{ Name = "fzf";        Scoop = "fzf";      Choco = "fzf";          Winget = "junegunn.fzf" },
+        @{ Name = "lazygit";    Scoop = "lazygit";  Choco = "lazygit";      Winget = "JesseDuffield.lazygit" }
     )
 
     foreach ($pkg in $packages) {
-        Install-WithWinget -PackageId $pkg.Id -Name $pkg.Name
+        switch ($PM) {
+            "scoop" {
+                Install-WithScoop -PackageName $pkg.Scoop -DisplayName $pkg.Name
+            }
+            "choco" {
+                Install-WithChoco -PackageName $pkg.Choco -DisplayName $pkg.Name
+            }
+            "winget" {
+                Install-WithWinget -PackageId $pkg.Winget -Name $pkg.Name
+            }
+        }
     }
 }
 
 function Install-NvimOnly {
-    Write-Step "Installing Neovim Only"
-    Install-WithWinget -PackageId "Neovim.Neovim" -Name "Neovim"
+    param([string]$PM)
+
+    Write-Step "Installing Neovim Only using $PM"
+
+    switch ($PM) {
+        "scoop" { Install-WithScoop -PackageName "neovim" -DisplayName "Neovim" }
+        "choco" { Install-WithChoco -PackageName "neovim" -DisplayName "Neovim" }
+        "winget" { Install-WithWinget -PackageId "Neovim.Neovim" -Name "Neovim" }
+    }
 }
 
 function Setup-NvimConfig {
@@ -323,10 +429,46 @@ if ($Check) {
     exit 0
 }
 
-if ($NvimOnly) {
-    Install-NvimOnly
+# Determine which package manager to use
+$SelectedPM = $PackageManager
+if ($PackageManager -eq "auto") {
+    $SelectedPM = Get-AvailablePackageManager
+    if (-not $SelectedPM) {
+        Write-Step "No package manager found. Installing Scoop (recommended)..."
+        if (Install-Scoop) {
+            $SelectedPM = "scoop"
+            Refresh-Path
+        } else {
+            Write-Err "Failed to install package manager. Please install Scoop, Chocolatey, or Winget manually."
+            exit 1
+        }
+    }
+    Write-Host "   Using package manager: $SelectedPM" -ForegroundColor Cyan
 } else {
-    Install-DevTools
+    # User specified a package manager, ensure it's installed
+    if (-not (Test-Command $SelectedPM)) {
+        Write-Step "$SelectedPM not found. Installing..."
+        switch ($SelectedPM) {
+            "scoop" {
+                if (-not (Install-Scoop)) { exit 1 }
+                Refresh-Path
+            }
+            "choco" {
+                if (-not (Install-Chocolatey)) { exit 1 }
+                Refresh-Path
+            }
+            "winget" {
+                Write-Err "Winget must be installed via Microsoft Store (App Installer)"
+                exit 1
+            }
+        }
+    }
+}
+
+if ($NvimOnly) {
+    Install-NvimOnly -PM $SelectedPM
+} else {
+    Install-DevTools -PM $SelectedPM
 }
 
 # Install font only if not already installed
