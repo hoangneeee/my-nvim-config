@@ -1,4 +1,4 @@
-#Requires -RunAsAdministrator
+#Requires -Version 7.0
 <#
 .SYNOPSIS
     Quick setup script for full development environment on Windows with LazyVim.
@@ -7,12 +7,18 @@
     This script installs and configures:
     - Neovim (latest) with LazyVim distribution
     - Git
-    - Node.js (LTS)
-    - Python
+    - mise (version manager)
+    - Node.js LTS (via mise)
+    - Python (via mise)
     - Ripgrep, fd, fzf (for telescope/searching)
     - Nerd Fonts (JetBrainsMono)
     - Windows Terminal configuration
     - lazygit
+
+.NOTES
+    Requires PowerShell 7.0 or higher.
+    Install: winget install Microsoft.PowerShell
+    Or: https://github.com/PowerShell/PowerShell/releases
 
 .EXAMPLE
     .\install.ps1
@@ -44,7 +50,12 @@ function Show-Help {
   Neovim Dev Environment Setup (LazyVim)
   =======================================
 
-  Usage: .\install.ps1 [options]
+  Requirements:
+    - PowerShell 7.0+ (pwsh)
+    - Install: winget install Microsoft.PowerShell
+    - Or: https://github.com/PowerShell/PowerShell/releases
+
+  Usage: pwsh .\install.ps1 [options]
 
   Options:
     -Check              Check if all dependencies are installed
@@ -56,18 +67,19 @@ function Show-Help {
   What gets installed:
     - Neovim (latest)
     - Git
-    - Node.js LTS
-    - Python 3
+    - mise (version manager for Node.js, Python, etc.)
+    - Node.js LTS (via mise)
+    - Python (via mise)
     - Ripgrep, fd, fzf
     - JetBrainsMono Nerd Font (with icons)
     - lazygit
 
   Examples:
-    .\install.ps1                         # Full installation (auto-detect PM)
-    .\install.ps1 -PackageManager choco   # Use Chocolatey
-    .\install.ps1 -PackageManager scoop   # Use Scoop
-    .\install.ps1 -Check                  # Check dependencies only
-    .\install.ps1 -NvimOnly               # Only Neovim + config
+    pwsh .\install.ps1                         # Full installation (auto-detect PM)
+    pwsh .\install.ps1 -PackageManager choco   # Use Chocolatey
+    pwsh .\install.ps1 -PackageManager scoop   # Use Scoop
+    pwsh .\install.ps1 -Check                  # Check dependencies only
+    pwsh .\install.ps1 -NvimOnly               # Only Neovim + config
 
   Package Manager Priority (auto mode):
     1. Scoop   - Best for dev tools, no admin required
@@ -80,6 +92,12 @@ function Show-Help {
 function Test-Command {
     param($Command)
     $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
+}
+
+function Test-IsAdmin {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = [Security.Principal.WindowsPrincipal]$identity
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
 function Test-NerdFontInstalled {
@@ -113,6 +131,7 @@ function Test-AllDependencies {
     $deps = @(
         @{ Name = "Git"; Command = "git" },
         @{ Name = "Neovim"; Command = "nvim" },
+        @{ Name = "mise"; Command = "mise" },
         @{ Name = "Node.js"; Command = "node" },
         @{ Name = "Python"; Command = "python" },
         @{ Name = "Ripgrep"; Command = "rg" },
@@ -178,6 +197,13 @@ function Install-Scoop {
 
 function Install-Chocolatey {
     Write-Step "Installing Chocolatey"
+
+    if (-not (Test-IsAdmin)) {
+        Write-Err "Chocolatey requires Administrator privileges."
+        Write-Host "   Please run PowerShell as Administrator or use Scoop instead." -ForegroundColor Yellow
+        return $false
+    }
+
     try {
         Set-ExecutionPolicy Bypass -Scope Process -Force
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
@@ -297,11 +323,11 @@ function Install-DevTools {
     Write-Step "Installing Development Tools using $PM"
 
     # Package names for each package manager
+    # Note: Node.js and Python are managed by mise (version manager)
     $packages = @(
         @{ Name = "Git";        Scoop = "git";      Choco = "git";          Winget = "Git.Git" },
         @{ Name = "Neovim";     Scoop = "neovim";   Choco = "neovim";       Winget = "Neovim.Neovim" },
-        @{ Name = "Node.js";    Scoop = "nodejs-lts"; Choco = "nodejs-lts"; Winget = "OpenJS.NodeJS.LTS" },
-        @{ Name = "Python";     Scoop = "python";   Choco = "python3";      Winget = "Python.Python.3.12" },
+        @{ Name = "mise";       Scoop = "mise";     Choco = "mise";         Winget = "jdx.mise" },
         @{ Name = "Ripgrep";    Scoop = "ripgrep";  Choco = "ripgrep";      Winget = "BurntSushi.ripgrep.MSVC" },
         @{ Name = "fd";         Scoop = "fd";       Choco = "fd";           Winget = "sharkdp.fd" },
         @{ Name = "fzf";        Scoop = "fzf";      Choco = "fzf";          Winget = "junegunn.fzf" },
@@ -332,6 +358,36 @@ function Install-NvimOnly {
         "scoop" { Install-WithScoop -PackageName "neovim" -DisplayName "Neovim" }
         "choco" { Install-WithChoco -PackageName "neovim" -DisplayName "Neovim" }
         "winget" { Install-WithWinget -PackageId "Neovim.Neovim" -Name "Neovim" }
+    }
+}
+
+function Setup-Mise {
+    Write-Step "Setting up mise (Node.js & Python)"
+
+    # Refresh PATH to find mise
+    Refresh-Path
+
+    if (-not (Test-Command "mise")) {
+        Write-Warn "mise not found in PATH. Please restart terminal and run: mise use -g node@lts python@latest"
+        return
+    }
+
+    try {
+        Write-Host "   Installing Node.js LTS via mise..."
+        mise use -g node@lts 2>&1 | Out-Null
+        Write-Success "Node.js installed via mise"
+
+        Write-Host "   Installing Python via mise..."
+        mise use -g python@latest 2>&1 | Out-Null
+        Write-Success "Python installed via mise"
+
+        # Activate mise in current session
+        Write-Host "   Activating mise..."
+        & mise activate pwsh | Out-String | Invoke-Expression
+    }
+    catch {
+        Write-Warn "mise setup incomplete: $_"
+        Write-Host "   Run manually after restart: mise use -g node@lts python@latest" -ForegroundColor Yellow
     }
 }
 
@@ -469,6 +525,7 @@ if ($NvimOnly) {
     Install-NvimOnly -PM $SelectedPM
 } else {
     Install-DevTools -PM $SelectedPM
+    Setup-Mise
 }
 
 # Install font only if not already installed
