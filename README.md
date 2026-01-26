@@ -1,8 +1,18 @@
 # Neovim + LazyVim Quick Setup
 
-One-line setup for Neovim with LazyVim on Windows.
+One-line setup for Neovim with LazyVim on Windows, macOS, and Linux.
 
 ## Quick Install
+
+### macOS / Linux
+
+**Chạy 1 lệnh này trên máy mới:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hoangneeee/my-nvim-config/master/setup.sh | bash
+```
+
+### Windows
 
 **Chạy 1 lệnh này trên máy mới (Run as Administrator):**
 
@@ -26,7 +36,43 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/hoangneeee/my-nvim-con
 - **JetBrainsMono Nerd Font** (with icons)
 - **Windows Terminal** configuration
 
+## Update Config
+
+### macOS / Linux
+
+**Update config từ GitHub:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hoangneeee/my-nvim-config/master/update-config.sh | bash
+```
+
+Hoặc clone repo và chạy script:
+
+```bash
+git clone https://github.com/hoangneeee/my-nvim-config.git
+cd my-nvim-config
+./update-config.sh          # Update config
+./update-config.sh --restore # Restore from backup
+```
+
+### Windows
+
+```powershell
+# Update config
+.\install.ps1 -NvimOnly
+```
+
 ## Manual Install
+
+### macOS / Linux
+
+```bash
+git clone https://github.com/hoangneeee/my-nvim-config.git
+cd my-nvim-config
+./setup.sh
+```
+
+### Windows
 
 ```powershell
 git clone https://github.com/hoangneeee/my-nvim-config.git
@@ -34,7 +80,7 @@ cd my-nvim-config
 .\install.ps1
 ```
 
-### Options
+#### Options (Windows)
 
 ```powershell
 .\install.ps1 -Help       # Show help
@@ -47,8 +93,11 @@ cd my-nvim-config
 
 ```
 my-nvim-config/
-├── setup.ps1              # One-line bootstrap script
-├── install.ps1            # Main installer
+├── setup.sh               # One-line setup (macOS/Linux)
+├── setup.ps1              # One-line setup (Windows)
+├── update-config.sh       # Update config script (macOS/Linux)
+├── install.ps1            # Main installer (Windows)
+├── uninstall.ps1          # Uninstaller (Windows)
 ├── README.md
 └── nvim/                  # LazyVim configuration
     ├── init.lua           # Entry point
@@ -56,11 +105,11 @@ my-nvim-config/
         ├── config/
         │   ├── lazy.lua       # Plugin manager + LazyVim setup
         │   ├── options.lua    # Custom options
-        │   ├── keymaps.lua    # Custom keymaps
+        │   ├── keymaps.lua    # Custom keymaps (VSCode-friendly)
         │   └── autocmds.lua   # Custom autocommands
         └── plugins/
             ├── colorscheme.lua  # Theme config (tokyonight)
-            └── example.lua      # Example plugin overrides
+            └── example.lua      # Plugin overrides
 ```
 
 ## Customization

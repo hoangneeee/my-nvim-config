@@ -6,17 +6,18 @@ return {
   -- { "folke/flash.nvim", enabled = false },
 
   -- Example: Change plugin options
-  -- {
-  --   "nvim-neo-tree/neo-tree.nvim",
-  --   opts = {
-  --     filesystem = {
-  --       filtered_items = {
-  --         visible = true,
-  --         hide_dotfiles = false,
-  --       },
-  --     },
-  --   },
-  -- },
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    opts = {
+      filesystem = {
+        filtered_items = {
+          visible = true,
+          hide_dotfiles = false,
+          hide_gitignored = false,
+        },
+      },
+    },
+  },
 
   -- Example: Add a new plugin
   -- {
