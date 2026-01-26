@@ -1,11 +1,8 @@
--- Example plugin configurations
+-- Custom plugin configurations
 -- Add your custom plugins here or override LazyVim defaults
 
 return {
-  -- Example: Disable a LazyVim default plugin
-  -- { "folke/flash.nvim", enabled = false },
-
-  -- Example: Change plugin options
+  -- Neo-tree configuration
   {
     "nvim-neo-tree/neo-tree.nvim",
     opts = {
@@ -19,9 +16,13 @@ return {
     },
   },
 
-  -- Example: Add a new plugin
-  -- {
-  --   "github/copilot.vim",
-  --   event = "InsertEnter",
-  -- },
+  -- Ensure rust-analyzer is installed via Mason
+  {
+    "williamboman/mason.nvim",
+    opts = {
+      ensure_installed = {
+        "rust-analyzer",
+      },
+    },
+  },
 }
