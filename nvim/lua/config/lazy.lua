@@ -21,25 +21,8 @@ require("lazy").setup({
     -- Import LazyVim and its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
 
-    -- Import any extras you want to use
-    -- [Languages]
-    { import = "lazyvim.plugins.extras.lang.typescript" },
-    { import = "lazyvim.plugins.extras.lang.python" },
-    { import = "lazyvim.plugins.extras.lang.go" },
-    { import = "lazyvim.plugins.extras.lang.rust" },
-    { import = "lazyvim.plugins.extras.lang.json" },
-    { import = "lazyvim.plugins.extras.lang.yaml" },
-    -- { import = "lazyvim.plugins.extras.lang.tailwind" },
-
-    -- [Linting & Formatting]
-    { import = "lazyvim.plugins.extras.linting.eslint" },
-    { import = "lazyvim.plugins.extras.formatting.prettier" },
-
-    -- [AI Code Completion]
-    { import = "lazyvim.plugins.extras.ai.codeium" },
-
-    -- [UI]
-    -- { import = "lazyvim.plugins.extras.ui.mini-animate" },
+    -- LazyExtras are managed via lazyvim.json file
+    -- Use :LazyExtras to enable/disable extras
 
     -- Import your custom plugins
     { import = "plugins" },
