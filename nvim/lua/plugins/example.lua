@@ -2,18 +2,10 @@
 -- Add your custom plugins here or override LazyVim defaults
 
 return {
-  -- Neo-tree configuration
+  -- Neo-tree configuration (disabled)
   {
     "nvim-neo-tree/neo-tree.nvim",
-    opts = {
-      filesystem = {
-        filtered_items = {
-          visible = true,
-          hide_dotfiles = false,
-          hide_gitignored = false,
-        },
-      },
-    },
+    enabled = false,
   },
 
   -- Ensure rust-analyzer is installed via Mason
