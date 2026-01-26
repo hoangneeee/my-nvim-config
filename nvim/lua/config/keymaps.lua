@@ -4,21 +4,13 @@
 local map = vim.keymap.set
 
 -- ============================================================================
--- CUSTOM KEYMAPS
+-- CUSTOM KEYMAPS (additions to LazyVim defaults)
 -- ============================================================================
 
--- [INSERT MODE] --------------------------------------------------------------
--- jk: Exit insert mode quickly
+-- [INSERT MODE]
 map("i", "jk", "<Esc>", { desc = "Exit insert mode" })
 
--- [NORMAL MODE] --------------------------------------------------------------
-
--- Buffer navigation (LazyVim defaults)
-map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
-map("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next buffer" })
-
--- Quick actions
-map("n", "<leader>x", "<cmd>bdelete<cr>", { desc = "Close buffer" })
+-- [NORMAL MODE]
 map("n", "<leader>Q", "<cmd>qa!<cr>", { desc = "Quit all without saving" })
 
 -- ============================================================================
@@ -26,62 +18,98 @@ map("n", "<leader>Q", "<cmd>qa!<cr>", { desc = "Quit all without saving" })
 -- ============================================================================
 --
 -- [General]
--- <leader>     : Open which-key (show all keybindings)
--- <leader>l    : Open Lazy plugin manager
--- <leader>qq   : Quit all
+-- <leader>l      : Open Lazy plugin manager
+-- <leader>qq     : Quit all
+-- <C-s>          : Save file (works in insert mode too)
 --
 -- [File/Find] <leader>f
--- <leader>ff   : Find files
--- <leader>fr   : Find recent files
--- <leader>fg   : Find git files
--- <leader>fb   : Browse files
+-- <leader>ff     : Find files
+-- <leader>fr     : Find recent files
+-- <leader>fg     : Find git files
+-- <leader>fn     : New file
+-- <leader>ft     : Terminal (root dir)
+-- <leader>fT     : Terminal (cwd)
 --
 -- [Search] <leader>s
--- <leader>sg   : Search text (grep)
--- <leader>sw   : Search word under cursor
--- <leader>sr   : Search and replace (Spectre)
+-- <leader>sg     : Search text (grep)
+-- <leader>sw     : Search word under cursor
+-- <leader>sr     : Search and replace
 --
 -- [Buffer] <leader>b
--- <leader>bb   : Switch buffer
--- <leader>bd   : Delete buffer
--- <S-h>        : Previous buffer
--- <S-l>        : Next buffer
+-- <leader>bb     : Switch to other buffer
+-- <leader>bd     : Delete buffer
+-- <leader>bo     : Delete other buffers
+-- <leader>bD     : Delete buffer and window
+-- <S-h>          : Previous buffer
+-- <S-l>          : Next buffer
+-- [b / ]b        : Previous/Next buffer
 --
 -- [Window]
--- <C-h/j/k/l>  : Move between windows
--- <leader>w    : Window menu
--- <leader>wd   : Close window
--- <leader>-    : Split horizontal
--- <leader>|    : Split vertical
+-- <C-h/j/k/l>    : Move between windows
+-- <C-Up/Down>    : Resize window height
+-- <C-Left/Right> : Resize window width
+-- <leader>-      : Split horizontal
+-- <leader>|      : Split vertical
+-- <leader>wd     : Close window
+-- <leader>wm     : Zoom window
 --
 -- [Code] <leader>c
--- <leader>cf   : Format code
--- <leader>cd   : Line diagnostics
--- <leader>cr   : Rename symbol
--- <leader>ca   : Code action
+-- <leader>cf     : Format code
+-- <leader>cd     : Line diagnostics
+-- gco            : Add comment below
+-- gcO            : Add comment above
+--
+-- [Diagnostics]
+-- ]d / [d        : Next/Previous diagnostic
+-- ]e / [e        : Next/Previous error
+-- ]w / [w        : Next/Previous warning
 --
 -- [Git] <leader>g
--- <leader>gg   : Open Lazygit
--- <leader>gb   : Git blame
--- <leader>gd   : Git diff
+-- <leader>gg     : Lazygit (root dir)
+-- <leader>gG     : Lazygit (cwd)
+-- <leader>gb     : Git blame line
+-- <leader>gf     : Git file history
+-- <leader>gl     : Git log
+-- <leader>gB     : Git browse (open in browser)
 --
--- [UI] <leader>u
--- <leader>uf   : Toggle format on save
--- <leader>us   : Toggle spelling
--- <leader>uw   : Toggle word wrap
--- <leader>ul   : Toggle line numbers
+-- [UI Toggle] <leader>u
+-- <leader>uf     : Toggle format on save
+-- <leader>us     : Toggle spelling
+-- <leader>uw     : Toggle word wrap
+-- <leader>ul     : Toggle line numbers
+-- <leader>uL     : Toggle relative numbers
+-- <leader>ud     : Toggle diagnostics
+-- <leader>uh     : Toggle inlay hints
+-- <leader>uz     : Zen mode
 --
 -- [Explorer]
--- <leader>e    : Toggle file explorer (neo-tree)
--- <leader>E    : Explorer at current directory
+-- <leader>e      : Toggle file explorer (neo-tree)
+-- <leader>E      : Explorer at current file
 --
--- [LSP]
--- gd           : Go to definition
--- gr           : Go to references
--- K            : Hover documentation
--- gI           : Go to implementation
--- gy           : Go to type definition
+-- [LSP] (defined in lsp config)
+-- gd             : Go to definition
+-- gr             : Go to references
+-- gI             : Go to implementation
+-- gy             : Go to type definition
+-- K              : Hover documentation
+-- <leader>cr     : Rename symbol
+-- <leader>ca     : Code action
 --
 -- [Terminal]
--- <C-/>        : Toggle terminal (LazyVim default)
+-- <C-/>          : Toggle terminal
+--
+-- [Tabs] <leader><tab>
+-- <leader><tab><tab> : New tab
+-- <leader><tab>d     : Close tab
+-- <leader><tab>]     : Next tab
+-- <leader><tab>[     : Previous tab
+--
+-- [Quickfix] <leader>x
+-- <leader>xl     : Toggle location list
+-- <leader>xq     : Toggle quickfix list
+-- [q / ]q        : Previous/Next quickfix
+--
+-- [Line Movement]
+-- <A-j>          : Move line down (works in insert/visual mode)
+-- <A-k>          : Move line up (works in insert/visual mode)
 --
